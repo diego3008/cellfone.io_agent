@@ -83,3 +83,5 @@ ipython_config.py
 
 #
 chroma_db/
+#langgraph
+.langgraph_api/

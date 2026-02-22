@@ -1,9 +1,22 @@
-
+from src.graph.store_graph import StoreGraph
 
 def main():
     print("Starting Langgraph Cellfone.io agent ...")
-    
-    
+    initial_state = {
+        "messages": ["I need to update some product records"],
+        "message_category": ""
+    }
+
+
+    workflow = StoreGraph()
+    graph = workflow.graph
+
+    for output in graph.stream(initial_state):
+        for node, state in output.items():
+            print("Node:\n")
+            print(f"{node}\n")
+            print("State:\n")
+            print(f"{state}\n")
 
 if __name__ == "__main__":
     main()

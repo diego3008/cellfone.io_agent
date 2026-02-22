@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from state import MessageCategory
+from src.state import MessageCategory
 
 
 class CategorizerMessageOutput(BaseModel):

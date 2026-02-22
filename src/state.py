@@ -8,6 +8,7 @@ from langgraph.graph.message import add_messages
 
 class StoreState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
+    last_message: str
     message_category: str
 
 class MessageCategory(str, Enum):

@@ -3,7 +3,7 @@ from src.graph.store_graph import StoreGraph
 def main():
     print("Starting Langgraph Cellfone.io agent ...")
     initial_state = {
-        "messages": ["I need to update some product records"],
+        "messages": ["I need all the orders made by users"],
         "message_category": ""
     }
 

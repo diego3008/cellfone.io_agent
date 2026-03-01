@@ -4,5 +4,5 @@ from .orders_nodes import build_orders_node
 NODES = {
     "message_listener": message_listener_node,
     "message_categoryzer": message_categoryzer_node,
-    "orders_nodes":  build_orders_node
+    "orders":  build_orders_node
 }

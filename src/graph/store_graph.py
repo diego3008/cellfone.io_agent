@@ -13,7 +13,7 @@ class StoreGraph():
         workflow.add_node("message_categoryzer", NODES["message_categoryzer"])
 
         #Subgraphs
-        workflow.add_node("orders_subgraph", order_graph)
+        workflow.add_node("orders_subgraph", order_graph.compile())
 
         
         workflow.add_edge(START, "message_listener")
@@ -24,7 +24,7 @@ class StoreGraph():
             "message_categoryzer",
             self.route_by_category,  # routing function
             {
-                "orders": "orders_subgraph",
+                "operation_request": "orders_subgraph",
                 "unknown": END
             }
         )
@@ -36,7 +36,7 @@ class StoreGraph():
 
     def route_by_category(self, state: StoreState) -> str:
         """Reads the category set by the categorizer node and returns the route."""
-        category = state.get("category", "unknown")
+        category = state["message_category"]
         return category
 
 

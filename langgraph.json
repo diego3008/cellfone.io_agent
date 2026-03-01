@@ -1,8 +1,7 @@
 {
     "dependencies": ["."],
     "graphs": {
-        "store_graph": "./src/graph/store_graph.py:store_graph",
-        "orders_graph": "./src/graph/orders_graph.py:graph"
+        "store_graph": "./src/graph/store_graph.py:store_graph"
     },
     "env": ".env"
 }

@@ -2,6 +2,7 @@ from langgraph.graph import END, START, StateGraph
 from src.state import StoreState
 from src.nodes import NODES
 import os
+from src.graph.orders_graph import graph as order_graph  # ajusta según tu estructura
 LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
 
 class StoreGraph():
@@ -10,12 +11,33 @@ class StoreGraph():
         workflow = StateGraph(StoreState)
         workflow.add_node("message_listener", NODES["message_listener"])
         workflow.add_node("message_categoryzer", NODES["message_categoryzer"])
-        workflow.add_edge(START, "message_listener")
-        workflow.add_edge("message_listener", "message_categoryzer")
-        workflow.add_edge("message_categoryzer", END)
+
+        #Subgraphs
+        workflow.add_node("orders_subgraph", order_graph)
 
         
+        workflow.add_edge(START, "message_listener")
+        workflow.add_edge("message_listener", "message_categoryzer")
+
+        # Conditional routing based on category
+        workflow.add_conditional_edges(
+            "message_categoryzer",
+            self.route_by_category,  # routing function
+            {
+                "orders": "orders_subgraph",
+                "unknown": END
+            }
+        )
+        
+        # All subgraphs lead to END
+        workflow.add_edge("orders_subgraph", END)
 
         self.graph = workflow.compile()
+
+    def route_by_category(self, state: StoreState) -> str:
+        """Reads the category set by the categorizer node and returns the route."""
+        category = state.get("category", "unknown")
+        return category
+
 
 store_graph = StoreGraph().graph

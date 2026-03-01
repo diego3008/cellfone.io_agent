@@ -10,6 +10,9 @@ class StoreState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     last_message: str
     message_category: str
+    last_checked_order: str
+    orders: list[any]
+
 
 class MessageCategory(str, Enum):
     PRODUCT_INQUIRY = "product_inquiry"

@@ -12,6 +12,7 @@ class StoreState(TypedDict):
     message_category: str
     last_checked_order: str
     orders: list[any]
+    support_anwer: str
 
 
 class MessageCategory(str, Enum):

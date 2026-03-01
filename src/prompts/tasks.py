@@ -6,6 +6,7 @@ Instructions:
       - **customer_complaint**: When the message communicates dissatisfaction or a complaint.
       - **customer_feedback**: When the message provides feedback or suggestions regarding a product or service.
       - **operations_request**: When the message content is related to perform operations on store data.
+      - **support_request**: When the message content is related to information about store policies.
       - **unrelated**: When the message content does not match any of the above categories.
 
 MESSAGE CONTENT:
@@ -15,3 +16,12 @@ Notes:
     Base your categorization strictly on the message content provided; avoid making assumptions or overgeneralizing.
 """
 
+SUPPORT_AGENT_TASK = """
+Instructions:
+    1. Review the provided message content thoroughly.
+    2. Use the available tools to answer the users.
+
+MESSAGE CONTENT:
+{message}
+
+"""

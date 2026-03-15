@@ -9,7 +9,7 @@ def message_cleanup_node(state: StoreState):
     messages = state["messages"]
     
     # Define your threshold
-    MAX_MESSAGES = 10
+    MAX_MESSAGES = 5
     
     if len(messages) > MAX_MESSAGES:
         # Get the messages to delete (oldest ones)

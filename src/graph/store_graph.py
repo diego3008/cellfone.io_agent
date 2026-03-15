@@ -9,6 +9,7 @@ class StoreGraph():
 
     def __init__(self):
         workflow = StateGraph(StoreState)
+        workflow.add_node("msg_cleanup", NODES["cleanup"])
         workflow.add_node("message_listener", NODES["message_listener"])
         workflow.add_node("message_categoryzer", NODES["message_categoryzer"])
 
@@ -16,8 +17,10 @@ class StoreGraph():
         workflow.add_node("orders_subgraph", order_graph.compile())
 
         
-        workflow.add_edge(START, "message_listener")
+        workflow.add_edge(START, "msg_cleanup")
+        workflow.add_edge("msg_cleanup", "message_listener")
         workflow.add_edge("message_listener", "message_categoryzer")
+
 
         # Conditional routing based on category
         workflow.add_conditional_edges(

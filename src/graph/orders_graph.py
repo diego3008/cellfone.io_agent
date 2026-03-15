@@ -14,10 +14,12 @@ class OrdersGraph():
     def __init__(self):
         workflow = StateGraph(StoreState)
         workflow.add_node("fetch_orders", NODES["orders"])
-        workflow.add_node("tools", ToolNode(tools))                 # nodo tools
-        
+        workflow.add_node("tools", ToolNode(tools))
+        workflow.add_node("process_results", NODES["process_tools_results"])  # 👈 new node
+
         workflow.add_edge(START, "fetch_orders")
-        workflow.add_edge("tools", "fetch_orders")                  # ciclo tools -> assistant
+        workflow.add_edge("tools", "process_results")    # 👈 tools → process
+        workflow.add_edge("process_results", "fetch_orders")     # 👈 process → back to agent
         workflow.add_conditional_edges(
             "fetch_orders",
             tools_condition                                          # decide si llamar tool o terminar

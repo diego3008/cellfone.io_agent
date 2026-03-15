@@ -1,5 +1,7 @@
 
 
+import json
+from langchain_core.messages import ToolMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
@@ -27,4 +29,19 @@ def build_orders_node(state: StoreState) -> any:
     builder.add_edge("tools", "assistant")
     builder.add_conditional_edges("assistant", tools_condition)
     return builder.compile()
+
+def process_tools_results(state: StoreState) -> any:
+    last_tool_message = next(
+        m for m in reversed(state["messages"])
+        if isinstance(m, ToolMessage)
+    )
+
+    match last_tool_message.name:
+        case "get_orders":
+            return {"orders": json.loads(last_tool_message.content)}
+        case "get_products":
+            return {"products": json.loads(last_tool_message.content)}
+        case _:
+            return {}
+
 

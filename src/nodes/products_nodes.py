@@ -1,38 +1,32 @@
-
-
 import json
 from langchain_core.messages import ToolMessage, SystemMessage
 from langchain_openai import ChatOpenAI
-from langgraph.prebuilt import ToolNode, tools_condition
 
 from ..state import StoreState
-from ..prompts import ORDERS_AGENT_PROMPT
+from ..prompts import PRODUCTS_AGENT_PROMPT
 from dotenv import load_dotenv
-from .tools.orders_tools import tools
+from .tools.products_tools import tools
 load_dotenv()
 
 
-def build_orders_node(state: StoreState) -> dict:
+def build_products_node(state: StoreState) -> dict:
     llm = ChatOpenAI(model="gpt-4o-mini")
     llm_with_tools = llm.bind_tools(tools)
-    messages = [SystemMessage(content=ORDERS_AGENT_PROMPT)] + state["messages"]
+    messages = [SystemMessage(content=PRODUCTS_AGENT_PROMPT)] + state["messages"]
     result = llm_with_tools.invoke(messages)
     return {"messages": [result]}
 
-def process_tools_results(state: StoreState) -> dict:
+
+def process_products_results(state: StoreState) -> dict:
     last_tool_message = next(
         m for m in reversed(state["messages"])
         if isinstance(m, ToolMessage)
     )
-   
+
     match last_tool_message.name:
-        case "get_orders":
-            return {"orders": json.loads(last_tool_message.content)}
-        case "get_order":
-            return {"last_checked_order": json.loads(last_tool_message.content)}
         case "get_products":
             return {"products": json.loads(last_tool_message.content)}
+        case "get_product":
+            return {"products": [json.loads(last_tool_message.content)]}
         case _:
             return {}
-
-

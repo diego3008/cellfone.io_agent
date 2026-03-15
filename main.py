@@ -4,7 +4,10 @@ def main():
     print("Starting Langgraph Cellfone.io agent ...")
     initial_state = {
         "messages": ["I need all the orders made by users"],
-        "message_category": ""
+        "message_category": "",
+        "last_message": "",
+        "last_checked_order": "",
+        "orders": []
     }
 
 

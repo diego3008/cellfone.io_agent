@@ -15,7 +15,7 @@ class OrdersGraph():
         workflow = StateGraph(StoreState)
         workflow.add_node("fetch_orders", NODES["orders"])
         workflow.add_node("tools", ToolNode(tools))
-        workflow.add_node("process_results", NODES["process_tools_results"])  # 👈 new node
+        workflow.add_node("process_results", NODES["process_results"])  # 👈 new node
 
         workflow.add_edge(START, "fetch_orders")
         workflow.add_edge("tools", "process_results")    # 👈 tools → process

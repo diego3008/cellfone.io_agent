@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict, Annotated
 from langchain_core.messages import AnyMessage
@@ -10,16 +10,15 @@ class StoreState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     last_message: str
     message_category: str
-    last_checked_order: str
-    orders: list[any]
-    products: list[any]
+    last_checked_order: list[dict[str, Any]]
+    orders: list[dict[str, Any]]    # replaced on each write
+    products: list[dict[str, Any]] 
     support_anwer: str
 
 
 class MessageCategory(str, Enum):
-    PRODUCT_INQUIRY = "product_inquiry"
-    ORDER_STATUS = "order_status"
-    POLICY_QUESTION = "policy_question"
-    COMPLAINT = "complaint"
-    OPERATION_REQUEST = "operation_request"  # new: triggers operations agent
-    OTHER = "other"
+    ORDER_INQUIRY = "order_inquiry"      # any order-related request: check status, list orders, get order by ID
+    PRODUCT_INQUIRY = "product_inquiry"  # browse catalog, get product details, check availability or pricing
+    COMPLAINT = "complaint"              # user expresses dissatisfaction or reports a problem
+    POLICY_QUESTION = "policy_question"  # questions about returns, warranties, shipping, or store policies
+    OTHER = "other"                      # anything that does not fit the above

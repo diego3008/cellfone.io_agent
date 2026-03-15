@@ -1,8 +1,9 @@
 from langgraph.graph import END, START, StateGraph
-from src.state import StoreState
-from src.nodes import NODES
 import os
-from src.graph.orders_graph import graph as order_graph  # ajusta según tu estructura
+from src.graph.orders_graph import graph as order_graph
+from src.graph.products_graph import graph as products_graph
+from src.nodes import NODES
+from src.state import StoreState
 LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
 
 class StoreGraph():
@@ -15,6 +16,7 @@ class StoreGraph():
 
         #Subgraphs
         workflow.add_node("orders_subgraph", order_graph.compile())
+        workflow.add_node("products_subgraph", products_graph.compile())
 
         
         workflow.add_edge(START, "msg_cleanup")
@@ -25,15 +27,19 @@ class StoreGraph():
         # Conditional routing based on category
         workflow.add_conditional_edges(
             "message_categoryzer",
-            self.route_by_category,  # routing function
+            self.route_by_category,
             {
-                "operation_request": "orders_subgraph",
-                "unknown": END
+                "order_inquiry": "orders_subgraph",
+                "product_inquiry": "products_subgraph",
+                "complaint": END,
+                "policy_question": END,
+                "other": END,
             }
         )
-        
+
         # All subgraphs lead to END
         workflow.add_edge("orders_subgraph", END)
+        workflow.add_edge("products_subgraph", END)
 
         self.graph = workflow.compile()
 

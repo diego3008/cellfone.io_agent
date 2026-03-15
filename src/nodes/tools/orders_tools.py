@@ -10,6 +10,21 @@ import os
 STORE_API_KEY = os.environ["STORE_API_KEY"] 
 
 @tool
+def get_order(order_id: int) -> Union[dict, str]:
+    """
+    Retrieves a single order by its ID.
+    Use this when the user asks about a specific order.
+    """
+    try:
+        url = f"{STORE_API_KEY}api/orders/{order_id}/"
+        resp = requests.get(url)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as ex:
+        return f"There was an error getting the order: {ex}"
+
+
+@tool
 def get_orders() -> Union[list, str]:
 
     """
@@ -27,5 +42,6 @@ def get_orders() -> Union[list, str]:
 
 
 tools = [
-    get_orders
+    get_orders,
+    get_order
 ]

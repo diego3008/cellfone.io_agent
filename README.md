@@ -13,23 +13,47 @@ The agent uses a graph-based workflow to:
 
 ## Architecture
 
+### Main Graph
+
 ```
 Customer Message
        │
        ▼
-[message_listener]        → Extracts the last message from state
+[msg_cleanup]             → Trims conversation history to the last 5 messages
        │
        ▼
-[message_categorizer]     → GPT-4o-mini classifies the message intent
+[message_listener]        → Extracts the last message string into last_message
        │
        ▼
-[Conditional Router]      → Routes based on message_category
+[message_categorizer]     → GPT-4o-mini classifies intent → message_category
        │
-       ├── order_status   → [Orders Subgraph] → tool calls → store API
-       ├── product_inquiry → (planned)
-       ├── policy_question → (planned)
-       ├── complaint       → (planned)
-       └── other          → END
+       ▼
+[Conditional Router]
+       │
+       ├── "operation_request" → [Orders Subgraph]
+       └── all other categories → END
+```
+
+### Orders Subgraph
+
+Implements an agentic tool-calling loop to fetch store data:
+
+```
+[fetch_orders]  ←─────────────────────────────────┐
+       │  (LLM agent with bound tools)              │
+       ▼                                            │
+ tools_condition                                    │
+       │                                            │
+       ├── tool call needed → [tools]               │
+       │                    (get_orders /            │
+       │                     get_products)           │
+       │                          │                 │
+       │                          ▼                 │
+       │                  [process_results] ────────┘
+       │                  (parses JSON, writes
+       │                   orders / products to state)
+       │
+       └── done → END
 ```
 
 ### Message Categories
@@ -40,7 +64,7 @@ Customer Message
 | `product_inquiry` | Questions about products, features, or availability |
 | `policy_question` | Questions about store policies, returns, warranties |
 | `complaint` | Customer dissatisfaction or issue reports |
-| `operation_request` | Internal operational requests |
+| `operation_request` | Internal operational requests — routed to the Orders Subgraph |
 | `other` | Unrelated or unclassifiable messages |
 
 ## Project Structure
@@ -57,11 +81,12 @@ cellfone_io_agent/
     ├── agents/
     │   └── message_categorizer.py  # Categorizer agent chain
     ├── nodes/
+    │   ├── message_cleanup.py      # Trims history to last 5 messages
     │   ├── message_listener.py     # Extracts last message from state
     │   ├── message_categorizer.py  # Runs categorizer, updates state
-    │   ├── orders_nodes.py         # Orders node with tool-calling LLM
+    │   ├── orders_nodes.py         # Orders agent with tool-calling loop
     │   └── tools/
-    │       └── orders_tools.py     # Tool: get_orders (calls store API)
+    │       └── orders_tools.py     # Tools: get_orders, get_products (store API)
     ├── graph/
     │   ├── store_graph.py          # Main workflow graph
     │   └── orders_graph.py         # Orders subgraph
@@ -163,15 +188,26 @@ class StoreState(TypedDict):
     message_category: str
     last_checked_order: str
     orders: list[any]
+    products: list[any]
+    support_answer: str
 ```
+
+### Message Cleanup
+
+Runs at the start of every graph invocation. Uses `RemoveMessage` to delete the oldest messages when the conversation history exceeds 5 messages, keeping the context window lean.
 
 ### Message Categorization
 
-The categorizer uses a `PromptTemplate` + `ChatOpenAI` + `with_structured_output` pipeline to enforce a `CategorizerMessageOutput` Pydantic model as the LLM response, guaranteeing a valid `MessageCategory` enum value every time.
+The `message_categorizer` node runs a LangChain chain: `PromptTemplate` → `ChatOpenAI(gpt-4o-mini)` → `with_structured_output(CategorizerMessageOutput)`. This enforces a typed `MessageCategory` enum value on every response with no free-form output.
 
 ### Orders Subgraph
 
-When a message is classified as `order_status`, the orders subgraph activates an LLM with bound tools. The `get_orders` tool makes a GET request to the store API and returns the current order list.
+Activated when the category is `operation_request`. An LLM agent is bound to two tools:
+
+- **`get_orders`** — GET `{STORE_API_KEY}api/orders/` → returns the current order list
+- **`get_products`** — GET `{STORE_API_KEY}api/products/` → returns the product catalog
+
+The agent loops (LLM → ToolNode → `process_results`) until it signals it is done. `process_results` inspects the last `ToolMessage`, parses the JSON payload, and writes the results into `orders` or `products` on the state.
 
 ## Roadmap
 

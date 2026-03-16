@@ -25,14 +25,17 @@ Customer Message
 [message_listener]        → Extracts the last message string into last_message
        │
        ▼
-[message_categorizer]     → GPT-4o-mini classifies intent → message_category
+[message_categorizer]     → GPT-4o-mini classifies intent → message_category (list)
        │
        ▼
-[Conditional Router]
+[Conditional Router]      → Fan-out: dispatches to one or more subgraphs in parallel
        │
-       ├── "operation_request" → [Orders Subgraph]
-       └── all other categories → END
+       ├── "order_inquiry"   → [Orders Subgraph]   ─┐
+       ├── "product_inquiry" → [Products Subgraph] ──┤→ (parallel) → END
+       └── no matching category → END
 ```
+
+The router supports **parallel subgraph execution**: if a message matches multiple categories (e.g. both `order_inquiry` and `product_inquiry`), both subgraphs are fanned out simultaneously using `Send` and their results are merged back into state.
 
 ### Orders Subgraph
 
@@ -60,12 +63,13 @@ Implements an agentic tool-calling loop to fetch store data:
 
 | Category | Description |
 |---|---|
-| `order_status` | Customer asking about an existing order |
-| `product_inquiry` | Questions about products, features, or availability |
+| `order_inquiry` | Customer asking about an existing order → Orders Subgraph |
+| `product_inquiry` | Questions about products, features, or availability → Products Subgraph |
 | `policy_question` | Questions about store policies, returns, warranties |
 | `complaint` | Customer dissatisfaction or issue reports |
-| `operation_request` | Internal operational requests — routed to the Orders Subgraph |
 | `other` | Unrelated or unclassifiable messages |
+
+> Multiple categories can be returned at once, triggering parallel subgraph execution.
 
 ## Project Structure
 

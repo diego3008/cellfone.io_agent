@@ -8,5 +8,5 @@ def message_categoryzer_node(state: StoreState) -> StoreState:
         state["message_category"] = "Not message"
         return state
     result = AGENT_REGISTRY["message_categorizer"].invoke({"message" : message})
-    state["message_category"] = result.category.value
+    state["message_category"] = [c.value for c in result.categories]
     return state

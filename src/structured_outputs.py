@@ -4,4 +4,4 @@ from src.state import MessageCategory
 
 
 class CategorizerMessageOutput(BaseModel):
-    category: MessageCategory = Field(..., description="The category assigned to the message, indicating its type based on predefined rules.")
+    categories: list[MessageCategory] = Field(..., description="One or more categories assigned to the message. Assign multiple if the message clearly involves more than one intent (e.g. asking about both an order and a product).")

@@ -1,4 +1,5 @@
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import Send
 import os
 from src.graph.orders_graph import graph as order_graph
 from src.graph.products_graph import graph as products_graph
@@ -24,17 +25,10 @@ class StoreGraph():
         workflow.add_edge("message_listener", "message_categoryzer")
 
 
-        # Conditional routing based on category
+        # Conditional routing based on category — supports parallel fan-out
         workflow.add_conditional_edges(
             "message_categoryzer",
             self.route_by_category,
-            {
-                "order_inquiry": "orders_subgraph",
-                "product_inquiry": "products_subgraph",
-                "complaint": END,
-                "policy_question": END,
-                "other": END,
-            }
         )
 
         # All subgraphs lead to END
@@ -43,10 +37,14 @@ class StoreGraph():
 
         self.graph = workflow.compile()
 
-    def route_by_category(self, state: StoreState) -> str:
-        """Reads the category set by the categorizer node and returns the route."""
-        category = state["message_category"]
-        return category
+    def route_by_category(self, state: StoreState) -> list[str]:
+        """Returns one or more destination nodes based on detected categories, enabling parallel execution."""
+        subgraph_map = {
+            "order_inquiry": "orders_subgraph",
+            "product_inquiry": "products_subgraph",
+        }
+        destinations = [subgraph_map[c] for c in state["message_category"] if c in subgraph_map]
+        return destinations if destinations else [END]
 
 
 store_graph = StoreGraph().graph
